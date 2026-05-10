@@ -32,7 +32,8 @@ import {
   Send,
   Eye,
   Check,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -95,7 +96,6 @@ export default function Admin() {
     setVipLevels(databaseService.getVipLevels());
     setDailyCodes(databaseService.getDailyCodes());
     setMaintenanceMsg(databaseService.getMaintenanceMessage());
-    setCommission(databaseService.getWithdrawalCommission());
     if (selectedChatUser) {
       setChatMessages(databaseService.getChatMessages(selectedChatUser.id));
     }
@@ -108,6 +108,9 @@ export default function Admin() {
       return;
     }
     refreshData();
+    // Load commission once on mount
+    setCommission(databaseService.getWithdrawalCommission());
+    
     const interval = setInterval(refreshData, 5000); 
     return () => clearInterval(interval);
   }, [selectedChatUser, navigate]);
@@ -164,8 +167,9 @@ export default function Admin() {
         databaseService.saveUser({ ...user, balance: user.balance + num });
         databaseService.createTransaction({
           userId: user.id,
-          amount: num,
+          amount: Math.abs(num),
           type: num >= 0 ? 'deposit' : 'withdrawal',
+          status: 'completed'
         });
         refreshData();
       }
@@ -429,11 +433,20 @@ export default function Admin() {
                               {transactions.slice(0, 5).map(tx => (
                                 <div key={tx.id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-3xl border border-gray-50">
                                    <div className="flex items-center gap-4">
-                                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${tx.type === 'deposit' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'}`}>
-                                         {tx.type === 'deposit' ? <ArrowUpRight size={20} /> : <TrendingUp size={20} className="rotate-180" />}
+                                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                                        tx.type === 'deposit' ? 'bg-blue-100 text-blue-600' : 
+                                        tx.type === 'subscription' ? 'bg-purple-100 text-purple-600' :
+                                        'bg-rose-100 text-rose-600'}`}>
+                                         {tx.type === 'deposit' ? <ArrowUpRight size={20} /> : 
+                                          tx.type === 'subscription' ? <Sparkles size={20} /> :
+                                          <TrendingUp size={20} className="rotate-180" />}
                                       </div>
                                       <div>
-                                         <h5 className="text-[13px] font-black text-gray-800">{tx.type === 'deposit' ? 'إيداع رصيد' : 'طلب سحب'}</h5>
+                                         <h5 className="text-[13px] font-black text-gray-800">
+                                           {tx.type === 'deposit' ? 'إيداع رصيد' : 
+                                            tx.type === 'subscription' ? 'اشتراك VIP' :
+                                            'سحب أرباح'}
+                                         </h5>
                                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">{tx.id} • {new Date(tx.createdAt).toLocaleDateString()}</p>
                                       </div>
                                    </div>
@@ -779,8 +792,13 @@ export default function Admin() {
                               {filteredTransactions.map(tx => (
                                 <tr key={tx.id} className="border-b last:border-0 border-gray-50">
                                   <td className="p-6">
-                                     <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${tx.type === 'deposit' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
-                                       {tx.type === 'deposit' ? 'إيداع رصيد' : 'طلب سحب'}
+                                     <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${
+                                       tx.type === 'deposit' ? 'bg-blue-50 text-blue-600' : 
+                                       tx.type === 'subscription' ? 'bg-purple-50 text-purple-600' :
+                                       'bg-amber-50 text-amber-600'}`}>
+                                       {tx.type === 'deposit' ? 'إيداع رصيد' : 
+                                        tx.type === 'subscription' ? 'اشتراك VIP' : 
+                                        'سحب أرباح'}
                                      </span>
                                   </td>
                                   <td className="p-6">

@@ -127,6 +127,50 @@ const STORAGE_KEYS = {
   DAILY_CODES: 'zea_daily_codes',
 };
 
+// Helper for safe storage with quota management
+const safeSetItem = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    if (e instanceof DOMException && (e.code === 22 || e.name === 'QuotaExceededError')) {
+      console.warn('Storage quota exceeded, trimming old data...');
+      
+      // Trim task records first (they grow fast)
+      if (key === STORAGE_KEYS.TASK_RECORDS) {
+        const records = JSON.parse(value);
+        if (records.length > 500) {
+          localStorage.setItem(key, JSON.stringify(records.slice(-500)));
+          return;
+        }
+      }
+
+      // If trimming specific key didn't help, try trimming others
+      const keysToTrim = [STORAGE_KEYS.NOTIFICATIONS, STORAGE_KEYS.CHAT, STORAGE_KEYS.TRANSACTIONS, STORAGE_KEYS.TASK_RECORDS];
+      for (const k of keysToTrim) {
+        const data = localStorage.getItem(k);
+        if (data) {
+          try {
+            const arr = JSON.parse(data);
+            if (Array.isArray(arr) && arr.length > 100) {
+              localStorage.setItem(k, JSON.stringify(arr.slice(-100)));
+              console.log(`Trimmed ${k} to 100 items`);
+            }
+          } catch (err) {
+            localStorage.removeItem(k);
+          }
+        }
+      }
+      
+      // Try setting the item again after trimming others
+      try {
+        localStorage.setItem(key, value);
+      } catch (err) {
+        console.error('Failed to set item even after trimming:', err);
+      }
+    }
+  }
+};
+
 const DEFAULT_CURRENCIES: Currency[] = [
   { id: '1', name: 'USDT', network: 'TRC20', address: 'T9yD...xY2v', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=T9yD...xY2v', iconUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.png', price: '1.00', isActive: true },
   { id: '2', name: 'USDC', network: 'ERC20', address: '0x71...55c2', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x71...55c2', iconUrl: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png', price: '1.00', isActive: true },
@@ -181,11 +225,11 @@ export const databaseService = {
     const index = currencies.findIndex(c => c.id === currency.id);
     if (index >= 0) currencies[index] = currency;
     else currencies.push(currency);
-    localStorage.setItem(STORAGE_KEYS.CURRENCIES, JSON.stringify(currencies));
+    safeSetItem(STORAGE_KEYS.CURRENCIES, JSON.stringify(currencies));
   },
   deleteCurrency: (id: string) => {
     const currencies = databaseService.getCurrencies().filter(c => c.id !== id);
-    localStorage.setItem(STORAGE_KEYS.CURRENCIES, JSON.stringify(currencies));
+    safeSetItem(STORAGE_KEYS.CURRENCIES, JSON.stringify(currencies));
   },
 
   // VIP Levels
@@ -198,11 +242,11 @@ export const databaseService = {
     const index = levels.findIndex(l => l.id === level.id);
     if (index >= 0) levels[index] = level;
     else levels.push(level);
-    localStorage.setItem(STORAGE_KEYS.VIP_LEVELS, JSON.stringify(levels));
+    safeSetItem(STORAGE_KEYS.VIP_LEVELS, JSON.stringify(levels));
   },
   deleteVipLevel: (id: string) => {
     const levels = databaseService.getVipLevels().filter(l => l.id !== id);
-    localStorage.setItem(STORAGE_KEYS.VIP_LEVELS, JSON.stringify(levels));
+    safeSetItem(STORAGE_KEYS.VIP_LEVELS, JSON.stringify(levels));
   },
 
   // Daily Codes
@@ -232,7 +276,7 @@ export const databaseService = {
     };
     
     codes.push(newCode);
-    localStorage.setItem(STORAGE_KEYS.DAILY_CODES, JSON.stringify(codes));
+    safeSetItem(STORAGE_KEYS.DAILY_CODES, JSON.stringify(codes));
     return newCode;
   },
   useDailyCode: (userId: string, code: string): boolean => {
@@ -244,7 +288,7 @@ export const databaseService = {
     if (codeIndex >= 0) {
       codes[codeIndex].isUsed = true;
       codes[codeIndex].usedAt = new Date().toISOString();
-      localStorage.setItem(STORAGE_KEYS.DAILY_CODES, JSON.stringify(codes));
+      safeSetItem(STORAGE_KEYS.DAILY_CODES, JSON.stringify(codes));
       return true;
     }
     
@@ -297,7 +341,7 @@ export const databaseService = {
     const index = codes.findIndex(c => c.id === code.id);
     if (index >= 0) codes[index] = code;
     else codes.push(code);
-    localStorage.setItem(STORAGE_KEYS.TASK_CODES, JSON.stringify(codes));
+    safeSetItem(STORAGE_KEYS.TASK_CODES, JSON.stringify(codes));
   },
 
   // Task Records
@@ -316,7 +360,7 @@ export const databaseService = {
       createdAt: new Date().toISOString(),
     };
     records.push(newRecord);
-    localStorage.setItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
+    safeSetItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
     return newRecord;
   },
   updateTaskRecord: (id: string, updates: Partial<TaskRecord>) => {
@@ -324,7 +368,7 @@ export const databaseService = {
     const index = records.findIndex(r => r.id === id);
     if (index >= 0) {
       records[index] = { ...records[index], ...updates };
-      localStorage.setItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
+      safeSetItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
       return records[index];
     }
     return null;
@@ -338,7 +382,7 @@ export const databaseService = {
       createdAt: new Date().toISOString(),
     };
     records.push(newRecord);
-    localStorage.setItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
+    safeSetItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
     return newRecord;
   },
   updateTaskStatus: (id: string, status: 'approved' | 'rejected') => {
@@ -347,14 +391,14 @@ export const databaseService = {
     if (index >= 0) {
       const record = records[index];
       record.status = status;
-      localStorage.setItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
+      safeSetItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(records));
 
       if (status === 'approved') {
         const users = databaseService.getUsers();
         const uIdx = users.findIndex(u => u.id === record.userId);
         if (uIdx >= 0) {
           users[uIdx].balance += record.reward;
-          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+          safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
           const currentUser = databaseService.getCurrentUser();
           if (currentUser && record.userId === currentUser.id) {
             databaseService.updateCurrentUser({ balance: users[uIdx].balance });
@@ -382,12 +426,12 @@ export const databaseService = {
     const index = users.findIndex(u => u.id === user.id);
     if (index >= 0) users[index] = user;
     else users.push(user);
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
     
     // Sync with current user if the ID matches
     const current = databaseService.getCurrentUser();
     if (current && current.id === user.id) {
-       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+       safeSetItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
     }
   },
   getCurrentUser: (): User | null => {
@@ -412,7 +456,7 @@ export const databaseService = {
     const current = databaseService.getCurrentUser();
     if (!current) return null;
     const updated = { ...current, ...userData };
-    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updated));
+    safeSetItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updated));
     databaseService.saveUser(updated);
     return updated;
   },
@@ -420,7 +464,7 @@ export const databaseService = {
     const users = databaseService.getUsers();
     const user = users.find(u => u.email === emailOrPhone || u.phoneNumber === emailOrPhone);
     if (user) {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      safeSetItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
       return user;
     }
     return null;
@@ -465,8 +509,8 @@ export const databaseService = {
       joinedAt: new Date().toISOString()
     };
     users.push(newUser);
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
+    safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    safeSetItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
     return newUser;
   },
   logout: () => {
@@ -483,7 +527,7 @@ export const databaseService = {
     const txs = databaseService.getTransactions(userId);
     return txs.some(t => t.type === 'withdrawal' && t.status === 'pending');
   },
-  createTransaction: (tx: Omit<Transaction, 'id' | 'createdAt'> & { status?: Transaction['status'] }) => {
+  createTransaction: (tx: Omit<Transaction, 'id' | 'createdAt' | 'status'> & { status?: Transaction['status'] }) => {
     const transactions = databaseService.getTransactions();
     const newTx: Transaction = {
       status: 'pending',
@@ -492,7 +536,7 @@ export const databaseService = {
       createdAt: new Date().toISOString(),
     };
     transactions.push(newTx);
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+    safeSetItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
     return newTx;
   },
   updateTransactionStatus: (id: string, status: Transaction['status']) => {
@@ -510,7 +554,7 @@ export const databaseService = {
           const uIdx = users.findIndex(u => u.id === tx.userId);
           if (uIdx >= 0) {
             users[uIdx].balance += tx.amount;
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
             const currentUser = databaseService.getCurrentUser();
             if (currentUser && tx.userId === currentUser.id) {
               databaseService.updateCurrentUser({ balance: users[uIdx].balance });
@@ -525,7 +569,7 @@ export const databaseService = {
         const uIdx = users.findIndex(u => u.id === tx.userId);
         if (uIdx >= 0) {
           users[uIdx].balance += tx.amount;
-          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+          safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
           const currentUser = databaseService.getCurrentUser();
           if (currentUser && tx.userId === currentUser.id) {
             databaseService.updateCurrentUser({ balance: users[uIdx].balance });
@@ -533,7 +577,7 @@ export const databaseService = {
         }
       }
       
-      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+      safeSetItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
       
       // Notify user
       databaseService.sendNotification({
@@ -562,14 +606,14 @@ export const databaseService = {
       createdAt: new Date().toISOString(),
     };
     all.push(newMsg);
-    localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(all));
+    safeSetItem(STORAGE_KEYS.CHAT, JSON.stringify(all));
     return newMsg;
   },
   deleteChatMessage: (msgId: string) => {
     const data = localStorage.getItem(STORAGE_KEYS.CHAT);
     const all: ChatMessage[] = data ? JSON.parse(data) : [];
     const filtered = all.filter(m => m.id !== msgId);
-    localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(filtered));
+    safeSetItem(STORAGE_KEYS.CHAT, JSON.stringify(filtered));
   },
 
   // Notifications
@@ -588,7 +632,7 @@ export const databaseService = {
       createdAt: new Date().toISOString(),
     };
     all.push(newNotif);
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
+    safeSetItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
   },
 
   // Gift Codes
@@ -604,13 +648,13 @@ export const databaseService = {
       isUsed: false,
     };
     codes.push(newCode);
-    localStorage.setItem(STORAGE_KEYS.GIFT_CODES, JSON.stringify(codes));
+    safeSetItem(STORAGE_KEYS.GIFT_CODES, JSON.stringify(codes));
     return newCode;
   },
 
   // Settings
   getMaintenanceMessage: () => localStorage.getItem(STORAGE_KEYS.SETTINGS + '_maintenance') || '',
-  setMaintenanceMessage: (msg: string) => localStorage.setItem(STORAGE_KEYS.SETTINGS + '_maintenance', msg),
+  setMaintenanceMessage: (msg: string) => safeSetItem(STORAGE_KEYS.SETTINGS + '_maintenance', msg),
   getWithdrawalCommission: () => parseInt(localStorage.getItem(STORAGE_KEYS.SETTINGS + '_commission') || '19'),
-  setWithdrawalCommission: (rate: number) => localStorage.setItem(STORAGE_KEYS.SETTINGS + '_commission', rate.toString()),
+  setWithdrawalCommission: (rate: number) => safeSetItem(STORAGE_KEYS.SETTINGS + '_commission', rate.toString()),
 };

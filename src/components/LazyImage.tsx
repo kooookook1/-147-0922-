@@ -69,7 +69,7 @@ export default function LazyImage({
       </AnimatePresence>
 
       {/* Actual Image */}
-      {isInView && (
+      {isInView && src && (
         <motion.img
           src={src}
           alt={alt}
