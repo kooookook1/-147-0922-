@@ -23,6 +23,7 @@ export default function Withdraw() {
       return;
     }
     setUser(currentUser);
+    if (currentUser.walletAddress) setWalletAddress(currentUser.walletAddress);
     setWithdrawalCommissionRate(databaseService.getWithdrawalCommission());
   }, [navigate]);
 
@@ -146,13 +147,12 @@ export default function Withdraw() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="bg-white px-8 pt-16 pb-8 border-b border-gray-50 shadow-sm sticky top-0 z-30">
-        <div className="flex justify-between items-center">
-           <Link to="/home" className="p-3 bg-gray-50 rounded-2xl text-gray-400">
+      <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm sticky top-0 z-30">
+        <div className="flex items-center">
+           <Link to="/home" className="p-3 bg-gray-50 rounded-2xl text-gray-500 hover:bg-gray-100 transition-colors ml-4">
              <ChevronLeft size={20} />
            </Link>
-           <h1 className="text-2xl font-black text-gray-800 tracking-tighter">سحب الأرباح</h1>
-           <div className="w-10" />
+           <h1 className="text-xl font-black text-gray-900 tracking-tight flex-1 text-center pr-10">سحب الأرباح</h1>
         </div>
       </div>
 

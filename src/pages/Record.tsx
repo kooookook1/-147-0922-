@@ -327,13 +327,13 @@ export default function Record() {
       </AnimatePresence>
 
       {/* Premium Header */}
-      <div className="bg-white px-8 pt-16 pb-6 border-b border-gray-50 shadow-[0_10px_30px_rgba(0,0,0,0.02)] sticky top-0 z-30">
-        <div className="flex justify-between items-center mb-8">
+      <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-50 shadow-[0_10px_30px_rgba(0,0,0,0.02)] sticky top-0 z-30">
+        <div className="flex justify-between items-center mb-6">
            <div className="flex items-center gap-3">
-              <Link to="/home" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
-                <ChevronLeft size={20} className="rotate-180" />
+              <Link to="/home" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                <ChevronLeft size={20} />
               </Link>
-              <h1 className="text-xl font-black text-gray-800">السجل</h1>
+              <h1 className="text-xl font-black text-gray-900 tracking-tight">السجل</h1>
            </div>
            <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100">
               <button 

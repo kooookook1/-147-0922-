@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'motion/react';
-import { User as UserIcon, Lock, Eye, EyeOff, ShieldCheck, Phone, Smartphone, Tag, Mail } from 'lucide-react';
+import { User as UserIcon, Lock, Eye, EyeOff, ShieldCheck, Smartphone, Tag } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { databaseService } from '../services/databaseService';
+import { countryCodes } from '../utils/countries';
 
 export default function Signup() {
   const navigate = useNavigate();
   const location = useLocation();
   const [agreed, setAgreed] = useState(false);
-  const [signupMethod, setSignupMethod] = useState<'phone' | 'email'>('phone');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [countryCode, setCountryCode] = useState('+964');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,13 +44,8 @@ export default function Signup() {
       return;
     }
     
-    if (signupMethod === 'phone' && !phone) {
+    if (!phone) {
       alert('الرجاء إدخال رقم الهاتف');
-      return;
-    }
-    
-    if (signupMethod === 'email' && !email) {
-      alert('الرجاء إدخال البريد الإلكتروني');
       return;
     }
 
@@ -73,12 +67,11 @@ export default function Signup() {
 
     setIsLoading(true);
     try {
-      const fullPhone = signupMethod === 'phone' ? `${countryCode}${phone}` : '';
-      const finalEmail = signupMethod === 'email' ? email : `${phone}@zea.com`;
+      const fullPhone = `${countryCode}${phone}`;
       
       databaseService.signup({ 
         name, 
-        email: finalEmail, 
+        email: `${fullPhone}@zea.com`, 
         phoneNumber: fullPhone,
         invitationCode
       });
@@ -91,28 +84,6 @@ export default function Signup() {
     }
   };
 
-  const arabCountries = [
-    { code: '+964', name: 'العراق' },
-    { code: '+966', name: 'السعودية' },
-    { code: '+971', name: 'الإمارات' },
-    { code: '+20', name: 'مصر' },
-    { code: '+962', name: 'الأردن' },
-    { code: '+963', name: 'سوريا' },
-    { code: '+961', name: 'لبنان' },
-    { code: '+970', name: 'فلسطين' },
-    { code: '+967', name: 'اليمن' },
-    { code: '+968', name: 'عمان' },
-    { code: '+965', name: 'الكويت' },
-    { code: '+974', name: 'قطر' },
-    { code: '+973', name: 'البحرين' },
-    { code: '+212', name: 'المغرب' },
-    { code: '+213', name: 'الجزائر' },
-    { code: '+216', name: 'تونس' },
-    { code: '+218', name: 'ليبيا' },
-    { code: '+249', name: 'السودان' },
-    { code: '+222', name: 'موريتانيا' }
-  ];
-
   return (
     <div className="min-h-screen bg-[#fcfdfe] font-sans text-right pb-20 relative overflow-hidden" dir="rtl">
       {/* Blue curved background */}
@@ -124,62 +95,30 @@ export default function Signup() {
         </div>
 
         <div className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100">
-          
-          {/* Method Selector */}
-          <div className="flex bg-gray-50 p-1 rounded-xl mb-6 border border-gray-100">
-            <button
-              onClick={() => setSignupMethod('phone')}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${signupMethod === 'phone' ? 'bg-white text-[#4285F4] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              التسجيل عبر الهاتف
-            </button>
-            <button
-              onClick={() => setSignupMethod('email')}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${signupMethod === 'email' ? 'bg-white text-[#4285F4] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              البريد الإلكتروني
-            </button>
-          </div>
 
           <div className="space-y-4">
             
-            {/* Input based on method */}
-            {signupMethod === 'phone' ? (
-              <div className="flex items-center gap-2 border-b border-gray-200 py-3">
-                <Smartphone className="text-gray-400" size={20} />
-                <div className="h-4 w-[1px] bg-gray-300 mx-1"></div>
-                <select 
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="bg-transparent focus:outline-none appearance-none font-bold text-xs text-gray-700 w-16"
-                  dir="ltr"
-                >
-                  {arabCountries.map((c) => (
-                    <option key={c.code} value={c.code}>{c.code}</option>
-                  ))}
-                </select>
-                <input 
-                  type="tel" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="من فضلك أدخل رقم هاتفك"
-                  className="w-full bg-transparent focus:outline-none font-bold text-sm text-gray-800 placeholder-gray-400"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 border-b border-gray-200 py-3">
-                <Mail className="text-gray-400" size={20} />
-                <div className="h-4 w-[1px] bg-gray-300 mx-1"></div>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="من فضلك أدخل بريدك الإلكتروني"
-                  className="w-full bg-transparent focus:outline-none font-bold text-sm text-gray-800 placeholder-gray-400 text-left dir-ltr"
-                  dir="rtl"
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2 border-b border-gray-200 py-3">
+              <Smartphone className="text-gray-400" size={20} />
+              <div className="h-4 w-[1px] bg-gray-300 mx-1"></div>
+              <select 
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="bg-transparent focus:outline-none appearance-none font-bold text-xs text-gray-700 w-16"
+                dir="ltr"
+              >
+                {countryCodes.map((c) => (
+                  <option key={c.code} value={c.code}>{c.code}</option>
+                ))}
+              </select>
+              <input 
+                type="tel" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="من فضلك أدخل رقم هاتفك"
+                className="w-full bg-transparent focus:outline-none font-bold text-sm text-gray-800 placeholder-gray-400"
+              />
+            </div>
 
             {/* Captcha */}
             <div className="flex items-center gap-2 border-b border-gray-200 py-3">

@@ -35,9 +35,33 @@ export default function Tasks() {
 
   const handleValidateCode = () => {
     if (!user) return;
-    const codes = databaseService.getDailyCodes(user.id);
+
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    // Custom time window: 14:10 (2:10 PM) to 15:59 (3:59 PM)
+    const isValidTime = (hours === 14 && minutes >= 10) || (hours === 15);
+    
+    if (!isValidTime) {
+      setModalState({ isOpen: true, title: 'خارج وقت العمل', message: 'عذراً، نافذة تسليم المهام اليومية مفتوحة فقط من الساعة 2:10 مساءً إلى 4:00 مساءً بتوقيت جهازك.' });
+      return;
+    }
+
     const today = new Date().toISOString().split('T')[0];
     
+    const vipLevels = databaseService.getVipLevels();
+    const userVip = vipLevels.find(v => v.level === user.vipLevel);
+    
+    if (userVip) {
+      const userRecords = databaseService.getTaskRecords(user.id).filter(r => r.createdAt.startsWith(today));
+      if (userRecords.length >= userVip.tasksPerDay) {
+        setModalState({ isOpen: true, title: 'الدخل اليومي مكتمل', message: `لقد اكملت كل مهامك لهذا اليوم. سيتم تصفير الدخل اليومي عند الساعة 12:00 منتصف الليل للبدء مجدداً من الساعة 2:10 ظهراً.` });
+        return;
+      }
+    }
+
+    const codes = databaseService.getDailyCodes(user.id);
     const validCode = codes.find(c => c.code === taskCode && c.date === today);
     
     if (validCode) {
@@ -148,9 +172,9 @@ export default function Tasks() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="bg-white px-8 pt-16 pb-8 sticky top-0 z-30 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border-b border-gray-100/50 rounded-b-[40px]">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-black text-gray-800 tracking-tighter">قاعة المهام</h1>
+      <div className="bg-white px-6 pt-6 pb-6 sticky top-0 z-30 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border-b border-gray-100/50 rounded-b-[32px]">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">قاعة المهام</h1>
           <motion.button 
             whileHover={{ scale: 1.05, rotate: 15 }}
             whileTap={{ scale: 0.95 }} 

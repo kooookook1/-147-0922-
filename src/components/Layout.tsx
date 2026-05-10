@@ -132,7 +132,7 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col h-screen bg-[#fcfdfe] font-sans text-right" dir="rtl">
-      <main className="flex-1 overflow-y-auto pb-[75px]">
+      <main className={`flex-1 overflow-y-auto ${location.pathname !== '/owner-admin' ? 'pb-[75px]' : ''}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -146,14 +146,16 @@ export default function Layout() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <nav className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl flex justify-around items-end h-[75px] px-2 z-40 shadow-[0_-10px_30px_rgba(37,99,235,0.06)] border-t border-gray-50">
-        {NAV_ITEMS.map((item) => (
-          <NavItem key={item.path} item={item} />
-        ))}
-      </nav>
+      {location.pathname !== '/owner-admin' && (
+        <nav className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl flex justify-around items-end h-[75px] px-2 z-40 shadow-[0_-10px_30px_rgba(37,99,235,0.06)] border-t border-gray-50">
+          {NAV_ITEMS.map((item) => (
+            <NavItem key={item.path} item={item} />
+          ))}
+        </nav>
+      )}
 
       {/* Floating Chat Button */}
-      {user && location.pathname !== '/owner-admin' && (
+      {user && (user.totalInvited !== undefined ? user.totalInvited >= 3 : false) && location.pathname !== '/owner-admin' && (
         <motion.div 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

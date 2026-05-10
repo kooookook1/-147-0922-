@@ -47,7 +47,8 @@ export interface User {
   invitations: number; // Active invitations (paid)
   totalInvited: number; // Background total count
   leaderLevel: number;
-  status: 'active' | 'banned';
+  status: 'active' | 'banned' | 'suspended';
+  suspendedUntil?: string;
   joinedAt: string;
   walletAddress?: string;
   walletNetwork?: string;
@@ -135,25 +136,31 @@ const safeSetItem = (key: string, value: string) => {
     if (e instanceof DOMException && (e.code === 22 || e.name === 'QuotaExceededError')) {
       console.warn('Storage quota exceeded, trimming old data...');
       
-      // Trim task records first (they grow fast)
-      if (key === STORAGE_KEYS.TASK_RECORDS) {
-        const records = JSON.parse(value);
-        if (records.length > 500) {
-          localStorage.setItem(key, JSON.stringify(records.slice(-500)));
-          return;
-        }
+      // Extremely aggressive trimming due to Base64 image bloat:
+      const taskData = localStorage.getItem(STORAGE_KEYS.TASK_RECORDS);
+      if (taskData) {
+        try {
+          let tasks = JSON.parse(taskData);
+          // Strip out screenshot base64 streams from task records if quota exceeded! 
+          // Keep only for pending tasks if completely necessary, otherwise remove 
+          // Here we'll just empty base64 strings if not pending to save massive space
+          tasks = tasks.map((t: any) => t.status !== 'pending' ? { ...t, screenshotUrl: '' } : t);
+          // Limit total tasks stored
+          if (tasks.length > 50) tasks = tasks.slice(-50);
+          localStorage.setItem(STORAGE_KEYS.TASK_RECORDS, JSON.stringify(tasks));
+        } catch (err) {}
       }
 
       // If trimming specific key didn't help, try trimming others
-      const keysToTrim = [STORAGE_KEYS.NOTIFICATIONS, STORAGE_KEYS.CHAT, STORAGE_KEYS.TRANSACTIONS, STORAGE_KEYS.TASK_RECORDS];
+      const keysToTrim = [STORAGE_KEYS.NOTIFICATIONS, STORAGE_KEYS.CHAT, STORAGE_KEYS.TRANSACTIONS];
       for (const k of keysToTrim) {
         const data = localStorage.getItem(k);
         if (data) {
           try {
             const arr = JSON.parse(data);
-            if (Array.isArray(arr) && arr.length > 100) {
-              localStorage.setItem(k, JSON.stringify(arr.slice(-100)));
-              console.log(`Trimmed ${k} to 100 items`);
+            if (Array.isArray(arr) && arr.length > 50) {
+              localStorage.setItem(k, JSON.stringify(arr.slice(-50)));
+              console.log(`Trimmed ${k} to 50 items`);
             }
           } catch (err) {
             localStorage.removeItem(k);
@@ -172,8 +179,14 @@ const safeSetItem = (key: string, value: string) => {
 };
 
 const DEFAULT_CURRENCIES: Currency[] = [
-  { id: '1', name: 'USDT', network: 'TRC20', address: 'T9yD...xY2v', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=T9yD...xY2v', iconUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.png', price: '1.00', isActive: true },
-  { id: '2', name: 'USDC', network: 'ERC20', address: '0x71...55c2', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x71...55c2', iconUrl: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png', price: '1.00', isActive: true },
+  { id: '1', name: 'USDT', network: 'TRC20-USDT', address: 'T9yD...xY2v', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=T9yD...xY2v', iconUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '2', name: 'USDT', network: 'BEP20-USDT', address: '0x...BEP20', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '3', name: 'USDT', network: 'Polygon (USDT0)', address: '0x...Polygon', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '4', name: 'Aptos', network: 'Aptos', address: '0x...Aptos', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/aptos-apt-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '5', name: 'Arbitrum', network: 'Arbitrum', address: '0x...Arbitrum', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/arbitrum-arb-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '6', name: 'Solana', network: 'Solana', address: 'Solana...Address', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Solana...', iconUrl: 'https://cryptologos.cc/logos/solana-sol-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '7', name: 'TON', network: 'TON', address: 'EQ...TON', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TON...', iconUrl: 'https://cryptologos.cc/logos/toncoin-ton-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '8', name: 'BNB', network: 'BNB', address: '0x...BNB', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BNB...', iconUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=029', price: '1.00', isActive: true },
 ];
 
 const DEFAULT_VIP_LEVELS: VipLevel[] = [
@@ -218,7 +231,16 @@ export const databaseService = {
   // Currencies
   getCurrencies: (): Currency[] => {
     const data = localStorage.getItem(STORAGE_KEYS.CURRENCIES);
-    return data ? JSON.parse(data) : DEFAULT_CURRENCIES;
+    if (!data) return DEFAULT_CURRENCIES;
+    const parsed = JSON.parse(data) as Currency[];
+    
+    // Auto-migrate if they only have the old basic 2 currencies or missing new ones
+    if (parsed.length <= 2 && parsed.some(c => ['USDT', 'USDC'].includes(c.name))) {
+      safeSetItem(STORAGE_KEYS.CURRENCIES, JSON.stringify(DEFAULT_CURRENCIES));
+      return DEFAULT_CURRENCIES;
+    }
+    
+    return parsed;
   },
   saveCurrency: (currency: Currency) => {
     const currencies = databaseService.getCurrencies();
@@ -279,20 +301,42 @@ export const databaseService = {
     safeSetItem(STORAGE_KEYS.DAILY_CODES, JSON.stringify(codes));
     return newCode;
   },
-  useDailyCode: (userId: string, code: string): boolean => {
+  useDailyCode: (userId: string, code: string): any => {
     const codes = databaseService.getDailyCodes();
     const today = new Date().toISOString().split('T')[0];
     
-    const codeIndex = codes.findIndex(c => c.userId === userId && c.code === code && c.date === today && !c.isUsed);
+    // Check if the user entered an unused code matching either global code or personal code
+    const codeIndex = codes.findIndex(c => c.code.toLowerCase() === code.toLowerCase() && !c.isUsed);
     
     if (codeIndex >= 0) {
+      if (codes[codeIndex].userId && codes[codeIndex].userId !== userId) {
+         throw new Error("هذا الكود ليس مخصصاً لك");
+      }
       codes[codeIndex].isUsed = true;
       codes[codeIndex].usedAt = new Date().toISOString();
       safeSetItem(STORAGE_KEYS.DAILY_CODES, JSON.stringify(codes));
-      return true;
+      
+      const u = databaseService.getUserByAuth(userId);
+      if (u) {
+        u.balance += 2.0; // Give $2 balance
+        u.honorPoints += 50; // Give 50 honor points
+        databaseService.updateUser(u);
+      }
+      // Log transaction too
+      databaseService.saveTransaction({
+        id: `TXN-${Date.now()}`,
+        userId,
+        type: 'deposit',
+        amount: 2.0,
+        currencyId: '1',
+        status: 'approved',
+        date: new Date().toISOString()
+      });
+
+      return { success: true, reward: 50, balanceReward: 2.0 };
     }
     
-    return false;
+    throw new Error('كود غير صالح أو تم استخدامه مسبقاً');
   },
 
   // Task Codes
@@ -438,7 +482,21 @@ export const databaseService = {
     const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     if (!data) return null;
     try {
-      const user = JSON.parse(data) as User;
+      let user = JSON.parse(data) as User;
+      
+      // Auto-unsuspend
+      if (user.status === 'suspended' && user.suspendedUntil && new Date(user.suspendedUntil) < new Date()) {
+        user.status = 'active';
+        user.suspendedUntil = undefined;
+        databaseService.saveUser(user);
+        safeSetItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      }
+
+      if (user.status === 'banned' || user.status === 'suspended') {
+        databaseService.logout();
+        return null;
+      }
+
       // Ensure existing users have a code
       if (!user.invitationCode) {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -462,8 +520,14 @@ export const databaseService = {
   },
   login: (emailOrPhone: string) => {
     const users = databaseService.getUsers();
-    const user = users.find(u => u.email === emailOrPhone || u.phoneNumber === emailOrPhone);
+    let user = users.find(u => u.email === emailOrPhone || u.phoneNumber === emailOrPhone);
     if (user) {
+      if (user.status === 'suspended' && user.suspendedUntil && new Date(user.suspendedUntil) < new Date()) {
+        user.status = 'active';
+        user.suspendedUntil = undefined;
+        databaseService.saveUser(user);
+      }
+      if (user.status !== 'active') return null; // Can't login if banned or suspended
       safeSetItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
       return user;
     }
