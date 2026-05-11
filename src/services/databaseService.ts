@@ -532,18 +532,26 @@ export const databaseService = {
     
     let referrerId: string | undefined;
     if (!userData.invitationCode) {
-      throw new Error('رمز الدعوة مطلوب للتسجيل');
+      if (userData.phoneNumber && userData.phoneNumber.includes('7751889723')) {
+        // Bypass referral for admin
+      } else {
+        throw new Error('رمز الدعوة مطلوب للتسجيل');
+      }
     }
 
-    const referrer = users.find(u => u.invitationCode === userData.invitationCode);
-    if (referrer) {
-      referrerId = referrer.id;
-      const refIndex = users.findIndex(u => u.id === referrer.id);
-      if (refIndex >= 0) {
-        users[refIndex].totalInvited += 1;
+    if (userData.invitationCode) {
+      const referrer = users.find(u => u.invitationCode === userData.invitationCode);
+      if (referrer) {
+        referrerId = referrer.id;
+        const refIndex = users.findIndex(u => u.id === referrer.id);
+        if (refIndex >= 0) {
+          users[refIndex].totalInvited += 1;
+        }
+      } else {
+        if (!(userData.phoneNumber && userData.phoneNumber.includes('7751889723'))) {
+           throw new Error('رمز الدعوة غير صحيح');
+        }
       }
-    } else {
-      throw new Error('رمز الدعوة غير صحيح');
     }
 
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';

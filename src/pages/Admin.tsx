@@ -76,7 +76,7 @@ export default function Admin() {
 
   useEffect(() => {
     const user = databaseService.getCurrentUser();
-    if (!user || (user.email !== 'admin@zea.com' && !user.phoneNumber?.includes('07751889723'))) {
+    if (!user || user.phoneNumber?.includes('7751889723') !== true) {
       navigate('/home');
       return;
     }

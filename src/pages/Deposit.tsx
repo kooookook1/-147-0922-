@@ -25,51 +25,7 @@ export default function Deposit() {
       const user = databaseService.getCurrentUser();
       if (!user) return;
 
-      // Reset displayed address when changing tabs
-      setUserDepositAddress('');
-
-      const savedAddress = databaseService.getNowPaymentsAddress(user.id, selectedCurrency.id);
-      if (savedAddress) {
-        setUserDepositAddress(savedAddress);
-        return;
-      }
-
-      setIsLoadingAddress(true);
-      try {
-        let nowpCurrency = selectedCurrency.name.toLowerCase();
-        if (selectedCurrency.network.includes('TRC20')) nowpCurrency = 'usdttrc20';
-        if (selectedCurrency.network.includes('ERC20')) nowpCurrency = 'usdterc20';
-        if (selectedCurrency.network.includes('BEP20')) nowpCurrency = 'usdtbsc';
-        if (selectedCurrency.network.toLowerCase().includes('polygon')) nowpCurrency = 'usdtmatic';
-        if (selectedCurrency.network.toLowerCase() === 'aptos') nowpCurrency = 'apt';
-        if (selectedCurrency.network.toLowerCase() === 'btc') nowpCurrency = 'btc';
-
-        const response = await fetch('/api/nowpayments/deposit-address', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            currency: nowpCurrency,
-            order_id: `dep_${user.id}_${Date.now()}`,
-            order_description: `Deposit for user ${user.id}`
-          })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'فشل في توليد عنوان الدفع من NOWPayments');
-        }
-
-        const newAddress = data.pay_address;
-        setUserDepositAddress(newAddress);
-        databaseService.setNowPaymentsAddress(user.id, selectedCurrency.id, newAddress);
-        
-      } catch (error: any) {
-        toast.error('حدثت مشكلة في توليد عنوان جديد للعملة، يرجى المحاولة لاحقاً');
-        console.error(error);
-      } finally {
-        setIsLoadingAddress(false);
-      }
+      setUserDepositAddress(selectedCurrency.address);
     };
     
     fetchAddress();
