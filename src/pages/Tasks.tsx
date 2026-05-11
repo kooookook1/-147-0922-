@@ -149,7 +149,13 @@ export default function Tasks() {
   };
 
   return (
-    <div className="bg-[#fcfdfe] min-h-screen pb-28 font-sans text-right" dir="rtl">
+    <div className="bg-[#0a0e17] text-white min-h-screen pb-28 font-sans text-right relative overflow-x-hidden" dir="rtl">
+      
+      {/* Background Effect */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 left-0 w-full h-[50vh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-[#0a0e17] to-transparent"></div>
+      </div>
+
       <AnimatePresence>
         {showSuccessToast && (
           <motion.div 
@@ -158,12 +164,12 @@ export default function Tasks() {
             exit={{ opacity: 0, y: -50 }}
             className="fixed top-12 left-0 right-0 z-[200] flex items-center justify-center pointer-events-none px-4"
           >
-            <div className="bg-white/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-xl shadow-blue-500/10 border border-emerald-50 flex items-center gap-3">
-              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+            <div className="bg-[#131b2c]/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-[0_10px_30px_rgba(16,185,129,0.2)] border border-emerald-500/20 flex items-center gap-3">
+              <div className="w-8 h-8 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center text-emerald-400 shadow-inner">
                 <CheckCircle2 size={18} />
               </div>
               <div className="text-right">
-                <h3 className="text-sm font-black text-gray-800">إضافة بنجاح</h3>
+                <h3 className="text-sm font-black text-white">إضافة بنجاح</h3>
                 <p className="text-[10px] font-bold text-gray-400">يمكنك إكمال المهمة من السجل</p>
               </div>
             </div>
@@ -172,15 +178,17 @@ export default function Tasks() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="bg-white px-6 pt-6 pb-6 sticky top-0 z-30 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border-b border-gray-100/50 rounded-b-[32px]">
+      <div className="bg-[#131b2c] px-6 pt-6 pb-6 sticky top-0 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-b border-white/5 rounded-b-[32px]">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">قاعة المهام</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-black text-white tracking-wide">قاعة التداول المهام</h1>
+          </div>
           <motion.button 
             whileHover={{ scale: 1.05, rotate: 15 }}
             whileTap={{ scale: 0.95 }} 
-            className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 border border-gray-100"
+            className="w-10 h-10 bg-[#0a0e17] rounded-xl flex items-center justify-center text-gray-400 hover:text-white border border-white/10 shadow-inner transition-colors"
           >
-            <Filter size={20} />
+            <Filter size={18} />
           </motion.button>
         </div>
 
@@ -198,58 +206,58 @@ export default function Tasks() {
                   setIsValidated(false);
                   setActiveTasks(null);
                 }}
-                className={`flex items-center gap-3 px-8 py-4 rounded-[24px] whitespace-nowrap transition-all border ${
+                className={`flex items-center gap-3 px-8 py-3.5 rounded-2xl whitespace-nowrap transition-all border ${
                   isActive 
-                    ? `bg-white border-blue-100 shadow-[0_15px_30px_rgba(37,99,235,0.1)]` 
-                    : 'bg-gray-50/50 border-transparent text-gray-400'
+                    ? `bg-[#1a2333] border-blue-500/30 shadow-[0_5px_15px_rgba(59,130,246,0.15)]` 
+                    : 'bg-[#0a0e17] border-white/5 text-gray-500 hover:bg-[#131b2c]'
                 }`}
               >
-                <div className={`w-6 h-6 flex items-center justify-center ${isActive ? tab.color : 'text-gray-300'}`}>
+                <div className={`w-6 h-6 flex items-center justify-center ${isActive ? tab.color : 'text-gray-500'}`}>
                    <Icon size={20} strokeWidth={isActive ? 3 : 2} />
                 </div>
-                <span className={`text-xs font-black ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>{tab.label}</span>
-                {isActive && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+                <span className={`text-xs font-bold ${isActive ? 'text-white' : 'text-gray-500'}`}>{tab.label}</span>
+                {isActive && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.8)]" />}
               </motion.button>
             );
           })}
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-6 relative z-10">
         {/* Code Entry Section */}
         {!isValidated ? (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white p-10 rounded-[44px] border border-gray-100/50 shadow-2xl shadow-blue-500/5 mb-10 text-center relative overflow-hidden"
+            className="bg-[#131b2c] p-8 rounded-[32px] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] mb-10 text-center relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-              <Ticket size={120} className="rotate-12" />
+            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+              <Ticket size={120} className="rotate-12 text-blue-500" />
             </div>
 
-            <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[28px] flex items-center justify-center mx-auto mb-8 shadow-inner">
-               <Ticket size={40} />
+            <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-blue-500/20">
+               <Ticket size={40} className="transform rotate-[-15deg]" />
             </div>
-            <h3 className="text-2xl font-black text-gray-800 mb-2">أدخل كود اليوم</h3>
-            <p className="text-[12px] text-gray-400 font-bold mb-10 max-w-[240px] mx-auto leading-relaxed">يرجى إدخال الكود المستلم من قناة التليجرام الرسمية لتفعيل المهام.</p>
+            <h3 className="text-xl font-black text-white mb-2 tracking-wide">أدخل كود الجلسة</h3>
+            <p className="text-[11px] text-gray-400 font-bold mb-8 max-w-[240px] mx-auto leading-relaxed">يرجى إدخال الكود المستلم من القناة الرسمية لتفعيل المهام الاستثمارية.</p>
             
-            <div className="space-y-6 max-w-sm mx-auto">
+            <div className="space-y-5 max-w-sm mx-auto">
               <div className="relative">
                 <input 
                   type="text" 
                   value={taskCode}
                   onChange={(e) => setTaskCode(e.target.value)}
-                  placeholder="Ex: ZEA-2024-X"
-                  className="w-full py-6 px-8 bg-gray-50 border border-gray-100/50 rounded-[28px] text-center font-black text-blue-600 text-lg tracking-widest focus:outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all shadow-inner"
+                  placeholder="EX: ZEA-CODE"
+                  className="w-full py-5 px-6 bg-[#0a0e17] border border-white/10 rounded-2xl text-center font-mono font-bold text-blue-400 text-lg tracking-widest focus:outline-none focus:border-blue-500/50 focus:shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-all placeholder-gray-700 uppercase"
                 />
               </div>
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleValidateCode}
-                className="w-full py-6 bg-blue-600 text-white rounded-[28px] font-black text-sm shadow-2xl shadow-blue-600/30 active:translate-y-1 transition-all"
+                className="w-full py-5 bg-gradient-to-l from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black text-sm shadow-[0_10px_30px_rgba(59,130,246,0.3)] transition-all"
               >
-                تفعيل المهام الآن
+                تفعيل الجلسة
               </motion.button>
             </div>
           </motion.div>
@@ -257,20 +265,20 @@ export default function Tasks() {
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-emerald-50 border border-emerald-100 rounded-[32px] p-6 mb-10 flex items-center gap-4"
+            className="bg-emerald-500/10 border border-emerald-500/20 rounded-[24px] p-5 mb-8 flex items-center gap-4"
           >
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm">
+            <div className="w-12 h-12 bg-[#0a0e17] rounded-xl flex items-center justify-center text-emerald-400 shadow-inner border border-emerald-500/20">
               <CheckCircle2 size={24} />
             </div>
             <div>
-               <h4 className="text-[13px] font-black text-emerald-900">الكود نشط: {activeTasks?.code}</h4>
-               <p className="text-[10px] text-emerald-700/70 font-bold">يمكنك البدء بتنفيذ {activeTasks?.tasksCount} مهام مكافئة.</p>
+               <h4 className="text-[13px] font-black text-emerald-400 font-mono tracking-widest">{activeTasks?.code} <span className="text-white text-xs mr-2 font-sans bg-emerald-500/20 px-2 py-0.5 rounded">نشط</span></h4>
+               <p className="text-[10px] text-gray-400 font-bold mt-1">يمكنك البدء بتنفيذ {activeTasks?.tasksCount} مهام مكافئة.</p>
             </div>
           </motion.div>
         )}
 
         {/* Task List */}
-        <div className="space-y-5">
+        <div className="space-y-4">
            <AnimatePresence mode="wait">
             <motion.div 
               key={activeTab}
@@ -285,27 +293,28 @@ export default function Tasks() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className={`bg-white rounded-[32px] border border-gray-50 overflow-hidden relative group active:scale-95 transition-all outline-none ${!isValidated ? 'opacity-40 grayscale pointer-events-none' : 'shadow-sm hover:shadow-md'}`}
+                  className={`bg-[#131b2c] rounded-3xl border border-white/5 overflow-hidden relative group active:scale-95 transition-all outline-none ${!isValidated ? 'opacity-50 grayscale pointer-events-none' : 'hover:border-white/10 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]'}`}
                 >
                   <div className="p-4 flex items-center justify-between gap-4">
                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gray-50 rounded-[22px] flex items-center justify-center shrink-0 border border-gray-100 relative overflow-hidden group-hover:scale-110 transition-transform">
-                           {activeTab === 'youtube' && <Youtube className="w-8 h-8 text-red-500" />}
-                           {activeTab === 'tiktok' && <div className="w-8 h-8 flex items-center justify-center"><Play className="text-gray-900 fill-gray-900" size={22} /></div>}
-                           {activeTab === 'facebook' && <Facebook className="w-8 h-8 text-blue-600" />}
-                           {activeTab === 'instagram' && <Instagram className="w-8 h-8 text-pink-600" />}
+                        <div className="w-14 h-14 bg-[#0a0e17] rounded-xl flex items-center justify-center shrink-0 border border-white/5 relative overflow-hidden group-hover:scale-110 transition-transform">
+                           {activeTab === 'youtube' && <Youtube className="w-7 h-7 text-red-500" />}
+                           {activeTab === 'tiktok' && <div className="w-7 h-7 flex items-center justify-center"><Play className="text-gray-200 fill-gray-200" size={20} /></div>}
+                           {activeTab === 'facebook' && <Facebook className="w-7 h-7 text-blue-500" />}
+                           {activeTab === 'instagram' && <Instagram className="w-7 h-7 text-pink-500" />}
                         </div>
 
                         <div>
                            <div className="flex items-center gap-2 mb-1">
-                             <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-blue-600/90 text-white shadow-sm">
-                               {activeTab}
+                             <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded flex items-center gap-1 bg-[#1a2333] text-gray-300 border border-white/5 shadow-inner">
+                                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'youtube' ? 'bg-red-500' : activeTab === 'tiktok' ? 'bg-white' : activeTab === 'facebook' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
+                                {activeTab}
                              </span>
                            </div>
-                           <h3 className="font-black text-gray-800 text-[13px] leading-tight mb-1">زيادة تفاعل حقيقي</h3>
+                           <h3 className="font-bold text-gray-200 text-[12px] leading-tight mb-2">زيادة تفاعل حقيقي (مهمة)</h3>
                            <div className="flex items-center gap-1">
-                              <span className="text-[12px] font-black text-blue-600 tracking-tighter">
-                                ${user ? (databaseService.getVipLevels().find(v => v.level === user.vipLevel)?.rewardPerTask || 0).toFixed(2) : '0.00'}+
+                              <span className="text-[12px] font-black text-emerald-400 font-mono tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                +${user ? (databaseService.getVipLevels().find(v => v.level === user.vipLevel)?.rewardPerTask || 0).toFixed(2) : '0.00'}
                               </span>
                            </div>
                         </div>
@@ -316,7 +325,7 @@ export default function Tasks() {
                       whileTap={{ scale: 0.95 }}
                       onClick={handleClaimTask}
                       disabled={isSubmitting}
-                      className="bg-blue-600 text-white px-5 py-2.5 rounded-[16px] text-[11px] font-black shadow-lg shadow-blue-600/20 active:translate-y-1 transition-all disabled:opacity-50"
+                      className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 px-5 py-2.5 rounded-xl text-[11px] font-bold active:translate-y-1 transition-all disabled:opacity-50"
                      >
                        استلام
                      </motion.button>
@@ -329,19 +338,22 @@ export default function Tasks() {
       </div>
 
       {modalState.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[32px] shadow-2xl p-6 w-full max-w-sm"
+            className="bg-[#131b2c] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] p-6 w-full max-w-sm text-center"
           >
-            <h3 className="text-xl font-black text-gray-800 mb-2">{modalState.title}</h3>
-            <p className="text-sm font-bold text-gray-500 mb-6 leading-relaxed">{modalState.message}</p>
+            <div className="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+              <Filter size={32} />
+            </div>
+            <h3 className="text-xl font-black text-white mb-2">{modalState.title}</h3>
+            <p className="text-[13px] font-bold text-gray-400 mb-8 leading-relaxed max-w-[250px] mx-auto">{modalState.message}</p>
             <button 
               onClick={() => setModalState({ ...modalState, isOpen: false })}
-              className="w-full py-3.5 bg-blue-600 text-white rounded-2xl font-black text-sm shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+              className="w-full py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all"
             >
-              حسناً
+              موافق
             </button>
           </motion.div>
         </div>

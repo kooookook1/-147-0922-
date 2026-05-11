@@ -111,24 +111,24 @@ export default function VIP() {
   };
 
   return (
-    <div className="bg-[#f0f5fc] min-h-screen pb-24 font-sans text-right relative overflow-hidden" dir="rtl">
+    <div className="bg-[#0a0e17] text-white min-h-screen pb-24 font-sans text-right relative overflow-hidden" dir="rtl">
       
       {/* Abstract Background Shapes */}
       <div className="fixed top-0 left-0 w-full h-full z-0 pointer-events-none overflow-hidden">
-         <div className="absolute top-[10%] -left-[10%] w-64 h-64 bg-blue-200/30 rounded-full blur-[80px]" />
-         <div className="absolute bottom-[20%] -right-[10%] w-80 h-80 bg-blue-300/20 rounded-full blur-[100px]" />
+         <div className="absolute top-[10%] -left-[10%] w-64 h-64 bg-blue-500/10 rounded-full blur-[80px]" />
+         <div className="absolute bottom-[20%] -right-[10%] w-80 h-80 bg-emerald-500/5 rounded-full blur-[100px]" />
       </div>
 
-      <div className="bg-[#3b82f6] text-white px-5 py-4 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      <div className="bg-[#131b2c] text-white px-5 py-5 flex items-center justify-between sticky top-0 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-b border-white/5">
          <div className="w-16"></div>
-         <h1 className="text-[17px] font-bold flex-1 text-center">شراء</h1>
+         <h1 className="text-lg font-black flex-1 text-center tracking-wide">الترقية (VIP)</h1>
          <Link to="/record?category=finance&tab=all" className="w-16 flex justify-end">
-           <div className="border hover:bg-white/10 active:bg-white/20 transition-colors border-white/80 rounded-[8px] px-4 py-[3px] text-sm font-medium">سجل</div>
+           <div className="border border-white/20 hover:bg-white/10 active:bg-white/20 transition-all rounded-xl px-4 py-1 text-xs font-bold shadow-inner">سجل</div>
          </Link>
       </div>
 
       {/* Plans Container */}
-      <div className="px-5 py-6 space-y-4 relative z-10 w-full max-w-md mx-auto">
+      <div className="px-5 py-8 space-y-6 relative z-10 w-full max-w-md mx-auto">
         {plans.map((plan, index) => {
           const style = getLevelStyle(plan.price, index);
           const isCurrent = user?.vipLevel === plan.level;
@@ -140,34 +140,41 @@ export default function VIP() {
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-[16px] px-5 py-6 bg-gradient-to-r from-[#81b2f5] to-[#c2dcf6] shadow-sm"
+              className={`relative overflow-hidden rounded-[24px] px-6 py-8 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border ${isCurrent ? 'border-emerald-500/50 bg-gradient-to-br from-[#131b2c] to-[#0a0e17]' : 'border-white/10 bg-[#131b2c]'}`}
             >
-              <div className="relative z-10 flex flex-col h-full space-y-5">
+              {/* Highlight if current */}
+              {isCurrent && (
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+              )}
+              
+              <div className="relative z-10 flex flex-col h-full space-y-6">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-baseline gap-1">
-                     <span className="text-[26px] font-black text-[#154696] tracking-tight">{plan.price}</span>
-                     <span className="text-[13px] font-bold text-[#154696]">USDT</span>
+                  <div className="flex items-baseline gap-1.5">
+                     <span className={`text-[32px] font-black tracking-tight ${isCurrent ? 'text-emerald-400' : 'text-white'}`}>{plan.price}</span>
+                     <span className={`text-[13px] font-bold ${isCurrent ? 'text-emerald-500/70' : 'text-gray-400'}`}>USDT</span>
                   </div>
-                  <div className="bg-white px-4 py-[3px] rounded-xl shadow-sm">
-                     <span className={`text-[15px] font-bold ${style.color}`}>{style.label}</span>
+                  <div className={`px-4 py-1.5 rounded-xl shadow-inner border ${isCurrent ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-[#0a0e17] border-white/5'}`}>
+                     <span className={`text-[16px] font-black ${style.color} drop-shadow-md`}>{style.label}</span>
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                   <p className="text-white font-medium text-[14.5px]">
-                     عدد المهام في اليوم الواحد: {plan.tasksPerDay}
+                <div className="space-y-2">
+                   <p className="text-gray-300 font-bold text-sm flex justify-between items-center bg-[#0a0e17]/50 px-4 py-2 rounded-xl border border-white/5">
+                     <span>عدد المهام اليومية</span>
+                     <span className="text-white font-black">{plan.tasksPerDay}</span>
                    </p>
-                   <p className="text-white font-medium text-[14.5px]">
-                     فترة الصلاحية : 365
+                   <p className="text-gray-300 font-bold text-sm flex justify-between items-center bg-[#0a0e17]/50 px-4 py-2 rounded-xl border border-white/5">
+                     <span>فترة الصلاحية</span>
+                     <span className="text-white font-black">365 يوم</span>
                    </p>
                 </div>
 
                 <button 
                   onClick={() => handleJoin(plan)}
                   disabled={!!isCurrent || user?.vipLevel > plan.level}
-                  className={`w-full py-3 rounded-full text-[16px] font-bold transition-all ${isCurrent ? 'bg-black/10 text-white cursor-default' : (user?.vipLevel > plan.level) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-[#1a56db] text-white hover:bg-blue-800 active:scale-95'}`}
+                  className={`w-full py-4 rounded-xl text-[15px] font-black transition-all shadow-lg ${isCurrent ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default' : (user?.vipLevel > plan.level) ? 'bg-[#0a0e17] text-gray-500 border border-white/5 cursor-not-allowed shadow-none' : 'bg-gradient-to-l from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 active:scale-95 border border-white/10'}`}
                 >
-                  {isCurrent ? 'الباقة الحالية' : ((user?.vipLevel > plan.level) ? 'تم الترقية' : 'شراء')}
+                  {isCurrent ? 'الباقة الحالية' : ((user?.vipLevel > plan.level) ? 'تم الترقية' : 'تفعيل الباقة')}
                 </button>
               </div>
             </motion.div>
@@ -177,15 +184,15 @@ export default function VIP() {
 
       {/* Modal */}
       {modalState.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+            className="bg-[#131b2c] rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 w-full max-w-sm overflow-hidden text-center"
           >
-            <div className="p-6 text-center">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{modalState.title}</h3>
-                <p className="text-sm text-gray-600 mb-6">{modalState.message}</p>
+            <div className="p-8">
+                <h3 className="text-xl font-black text-white mb-2">{modalState.title}</h3>
+                <p className="text-[13px] font-bold text-gray-400 mb-8 leading-relaxed max-w-[250px] mx-auto">{modalState.message}</p>
                 <div className="flex gap-3">
                   <button 
                     onClick={() => {
@@ -195,14 +202,14 @@ export default function VIP() {
                             setModalState({ ...modalState, isOpen: false });
                         }
                     }}
-                    className="flex-1 py-2.5 bg-[#1a56db] text-white rounded-xl font-bold shadow-sm active:scale-95 transition-all"
+                    className="flex-1 py-3.5 bg-gradient-to-l from-blue-600 to-indigo-600 text-white rounded-xl font-black shadow-[0_10px_30px_rgba(59,130,246,0.3)] active:scale-95 transition-all"
                   >
                     تأكيد
                   </button>
                   {modalState.type === 'confirm' && (
                     <button 
                       onClick={() => setModalState({ ...modalState, isOpen: false })}
-                      className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold active:scale-95 transition-all"
+                      className="flex-1 py-3.5 bg-[#0a0e17] text-gray-300 border border-white/10 rounded-xl font-bold hover:bg-white/5 active:scale-95 transition-all"
                     >
                       إلغاء
                     </button>
