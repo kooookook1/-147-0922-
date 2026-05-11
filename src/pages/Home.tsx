@@ -297,45 +297,49 @@ export default function Home() {
       {/* Featured Upgrade Banner */}
       <motion.div 
         whileHover={{ scale: 1.02 }}
-        className="mx-6 mt-12 rounded-[40px] overflow-hidden bg-gradient-to-br from-[#1e40af] to-[#3b82f6] p-8 text-white relative shadow-2xl"
+        className="mx-6 mt-12 rounded-[40px] overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#3b82f6] p-8 text-white relative shadow-[0_20px_50px_rgba(30,58,138,0.3)]"
       >
+        {/* Golden glow effect */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-[60px]" />
+        
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-4">
-            <span className="px-3 py-1 bg-[#fbbf24] text-[#78350f] text-[10px] font-black rounded-lg uppercase tracking-wider">
-              VIP EXCLUSIVE
+            <span className="px-3 py-1 bg-gradient-to-r from-amber-200 to-amber-400 text-amber-900 text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm">
+              عرض VIP حصري
             </span>
           </div>
           <h3 className="text-[32px] font-black mb-3 leading-[1.1] tracking-tight text-white drop-shadow-sm">
-            ارتقِ بعضويتك<br />وضاعف دخلك
+            ارتقِ بعضويتك<br />وضاعف أرباحك
           </h3>
-          <p className="text-blue-100/90 text-sm font-bold mb-8 max-w-[190px] leading-relaxed">
-            عضوية <span className="text-white font-black underline decoration-amber-400 decoration-2 underline-offset-4">VIP 2</span> تمنحك وصولاً لمهام عالية القيمة وأرباحاً مضاعفة.
+          <p className="text-blue-100/90 text-[13px] font-bold mb-8 max-w-[210px] leading-relaxed">
+            اشترك الآن في عضوية <span className="text-amber-300 font-black">VIP</span> واحصل على مهام عالية القيمة ودخل يومي مضاعف.
           </p>
           <Link to="/vip">
             <motion.button 
-              whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(255,255,255,0.4)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(255,255,255,0.2)" }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white text-[#2563eb] px-10 py-4 rounded-[24px] text-[15px] font-black shadow-2xl flex items-center gap-3 group"
+              className="bg-white text-[#0f172a] px-8 py-3.5 rounded-[20px] text-[13px] font-black shadow-2xl flex items-center gap-3 transition-colors"
             >
-              تفعيل الآن 
-              <ChevronLeft size={20} className="transition-transform group-hover:-translate-x-1" />
+              تفعيل العضوية الآن
+              <ChevronLeft size={18} className="text-amber-500" />
             </motion.button>
           </Link>
         </div>
         
-        {/* The Beautiful Earnings Illustration */}
-        <div className="absolute -bottom-6 -right-10 w-72 h-72 opacity-100 pointer-events-none">
+        {/* 3D Illustration / Decorative Graphic */}
+        <div className="absolute -bottom-4 -left-6 w-64 h-64 opacity-90 pointer-events-none transform rotate-12">
            <motion.div
              animate={{ 
-               y: [0, -10, 0],
-               scale: [1, 1.05, 1]
+               y: [0, -12, 0],
+               scale: [1, 1.03, 1],
+               rotate: [12, 8, 12]
              }}
-             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
            >
              <LazyImage 
-              src="https://cdni.iconscout.com/illustration/premium/thumb/passive-income-illustration-download-in-svg-png-gif-file-formats--investment-success-financial-growth-profit-pack-business-illustrations-4734676.png" 
-              alt="Earnings Growth" 
-              className="w-full h-full object-contain filter drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-transparent" 
+              src="https://cdn-icons-png.flaticon.com/512/5110/5110754.png" 
+              alt="VIP Premium" 
+              className="w-full h-full object-contain filter drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)]" 
              />
            </motion.div>
         </div>

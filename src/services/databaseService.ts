@@ -179,14 +179,8 @@ const safeSetItem = (key: string, value: string) => {
 };
 
 const DEFAULT_CURRENCIES: Currency[] = [
-  { id: '1', name: 'USDT', network: 'TRC20-USDT', address: 'T9yD...xY2v', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=T9yD...xY2v', iconUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '2', name: 'USDT', network: 'BEP20-USDT', address: '0x...BEP20', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '3', name: 'USDT', network: 'Polygon (USDT0)', address: '0x...Polygon', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '4', name: 'Aptos', network: 'Aptos', address: '0x...Aptos', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/aptos-apt-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '5', name: 'Arbitrum', network: 'Arbitrum', address: '0x...Arbitrum', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/arbitrum-arb-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '6', name: 'Solana', network: 'Solana', address: 'Solana...Address', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Solana...', iconUrl: 'https://cryptologos.cc/logos/solana-sol-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '7', name: 'TON', network: 'TON', address: 'EQ...TON', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TON...', iconUrl: 'https://cryptologos.cc/logos/toncoin-ton-logo.svg?v=029', price: '1.00', isActive: true },
-  { id: '8', name: 'BNB', network: 'BNB', address: '0x...BNB', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BNB...', iconUrl: 'https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '3', name: 'USDT', network: 'Polygon (USDT0)', address: '0x8c6321dd1f...14ff40a51b54', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x...', iconUrl: 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=029', price: '1.00', isActive: true },
+  { id: '4', name: 'Bitcoin', network: 'BTC', address: 'bc1qslhl3k3c...vxqh8qtmvdvk', qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bc1...', iconUrl: 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=029', price: '60000.00', isActive: true },
 ];
 
 const DEFAULT_VIP_LEVELS: VipLevel[] = [
@@ -234,8 +228,8 @@ export const databaseService = {
     if (!data) return DEFAULT_CURRENCIES;
     const parsed = JSON.parse(data) as Currency[];
     
-    // Auto-migrate if they only have the old basic 2 currencies or missing new ones
-    if (parsed.length <= 2 && parsed.some(c => ['USDT', 'USDC'].includes(c.name))) {
+    // Auto-migrate to just the new Polygon currency and BTC if they have the old ones
+    if (parsed.length !== 2 || !parsed.some(c => c.network === 'Polygon (USDT0)') || !parsed.some(c => c.network === 'BTC')) {
       safeSetItem(STORAGE_KEYS.CURRENCIES, JSON.stringify(DEFAULT_CURRENCIES));
       return DEFAULT_CURRENCIES;
     }
@@ -721,4 +715,14 @@ export const databaseService = {
   setMaintenanceMessage: (msg: string) => safeSetItem(STORAGE_KEYS.SETTINGS + '_maintenance', msg),
   getWithdrawalCommission: () => parseInt(localStorage.getItem(STORAGE_KEYS.SETTINGS + '_commission') || '19'),
   setWithdrawalCommission: (rate: number) => safeSetItem(STORAGE_KEYS.SETTINGS + '_commission', rate.toString()),
+  getWithdrawalDelayHours: () => parseInt(localStorage.getItem(STORAGE_KEYS.SETTINGS + '_delay_hours') || '24'),
+  setWithdrawalDelayHours: (hours: number) => safeSetItem(STORAGE_KEYS.SETTINGS + '_delay_hours', hours.toString()),
+  
+  getNowPaymentsAddress: (userId: string, currencyId: string) => {
+    return localStorage.getItem(`nowpayments_${userId}_${currencyId}`) || null;
+  },
+  
+  setNowPaymentsAddress: (userId: string, currencyId: string, address: string) => {
+    safeSetItem(`nowpayments_${userId}_${currencyId}`, address);
+  }
 };

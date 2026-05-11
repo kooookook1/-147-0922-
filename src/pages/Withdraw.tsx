@@ -15,6 +15,7 @@ export default function Withdraw() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showActiveError, setShowActiveError] = useState(false);
+  const [withdrawalDelay, setWithdrawalDelay] = useState(24);
 
   useEffect(() => {
     const currentUser = databaseService.getCurrentUser();
@@ -25,6 +26,7 @@ export default function Withdraw() {
     setUser(currentUser);
     if (currentUser.walletAddress) setWalletAddress(currentUser.walletAddress);
     setWithdrawalCommissionRate(databaseService.getWithdrawalCommission());
+    setWithdrawalDelay(databaseService.getWithdrawalDelayHours());
   }, [navigate]);
 
   const getFeeAmount = () => {
@@ -227,9 +229,9 @@ export default function Withdraw() {
               </div>
               <ul className="space-y-2">
                  {[
-                   'تستغرق عملية المراجعة من 24 إلى 72 ساعة.',
+                   withdrawalDelay === 0 ? 'تتم عملية المراجعة وتحويل الأموال فورياً.' : `تستغرق عملية معالجة السحب حوالي ${withdrawalDelay} ساعة.`,
                    'يرجى التأكد بنسبة 100% من عنوان المحفظة.',
-                   'الحد الأدنى للسحب هو 10 USDT.',
+                   'الحد الأدنى للسحب هو 10 $.',
                    `سيتم خصم عمولة ثابتة قدرها ${withdrawalCommission}% لكل عملية.`,
                    'لا يمكنك تقديم طلب جديد قبل اكتمال الطلب السابق.'
                  ].map((rule, i) => (

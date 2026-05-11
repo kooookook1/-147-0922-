@@ -44,6 +44,7 @@ export default function Admin() {
   const [dailyCodes, setDailyCodes] = useState<UserDailyCode[]>([]);
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
   const [commission, setCommission] = useState(19);
+  const [withdrawalDelay, setWithdrawalDelay] = useState(24);
 
   // Chat States
   const [selectedChatUser, setSelectedChatUser] = useState<User | null>(null);
@@ -81,6 +82,7 @@ export default function Admin() {
     }
     refreshData();
     setCommission(databaseService.getWithdrawalCommission());
+    setWithdrawalDelay(databaseService.getWithdrawalDelayHours());
     setMaintenanceMsg(databaseService.getMaintenanceMessage());
     const interval = setInterval(refreshData, 5000); 
     return () => clearInterval(interval);
@@ -100,6 +102,7 @@ export default function Admin() {
   const handleUpdateMaintenance = () => {
     databaseService.setMaintenanceMessage(maintenanceMsg);
     databaseService.setWithdrawalCommission(commission);
+    databaseService.setWithdrawalDelayHours(withdrawalDelay);
     toast.success('تم تحديث إعدادات النظام بنجاح');
   };
 
@@ -460,17 +463,34 @@ export default function Admin() {
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
                     <div className="space-y-8">
                       {/* Commission */}
-                      <div className="pb-6 border-b border-gray-100">
-                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-2"><DollarSign size={18} className="text-blue-600"/> رسوم وعمولات السحب</h3>
-                        <p className="text-xs text-gray-500 mb-4">أدخل النسبة المئوية الثابتة لخصم العمولات عند تنفيذ الأعضاء لأوامر السحب.</p>
-                        <div className="flex items-center gap-3">
-                          <input 
-                            type="number" 
-                            className="bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-4 text-gray-900 font-bold focus:ring-2 focus:ring-blue-600 focus:outline-none w-32"
-                            value={commission}
-                            onChange={(e) => setCommission(parseInt(e.target.value)||0)}
-                          />
-                          <span className="text-gray-600 font-semibold">% عمولة السحب</span>
+                      <div className="pb-6 border-b border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-2"><DollarSign size={18} className="text-blue-600"/> رسوم وعمولات السحب</h3>
+                          <p className="text-xs text-gray-500 mb-4">النسبة المئوية العكسية المخصومة.</p>
+                          <div className="flex items-center gap-3">
+                            <input 
+                              type="number" 
+                              className="bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-4 text-gray-900 font-bold focus:ring-2 focus:ring-blue-600 focus:outline-none w-32"
+                              value={commission}
+                              onChange={(e) => setCommission(parseInt(e.target.value)||0)}
+                            />
+                            <span className="text-gray-600 font-semibold">%</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-2"><Clock size={18} className="text-purple-600"/> مدة تنفيذ أوامر السحب</h3>
+                          <p className="text-xs text-gray-500 mb-4">المدة الزمنية لوصول الأموال لمحفظة العميل.</p>
+                          <select
+                            className="bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-4 text-gray-900 font-bold focus:ring-2 focus:ring-blue-600 focus:outline-none w-full"
+                            value={withdrawalDelay}
+                            onChange={(e) => setWithdrawalDelay(parseInt(e.target.value))}
+                          >
+                            <option value={0}>فوري (نفس الدقيقة)</option>
+                            <option value={24}>بعد يوم (24 ساعة)</option>
+                            <option value={48}>بعد يومين (48 ساعة)</option>
+                            <option value={72}>بعد 3 أيام (72 ساعة)</option>
+                          </select>
                         </div>
                       </div>
 

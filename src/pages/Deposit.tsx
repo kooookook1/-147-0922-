@@ -9,8 +9,8 @@ export default function Deposit() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
   const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+  const [userDepositAddress, setUserDepositAddress] = useState<string>('');
 
   useEffect(() => {
     const data = databaseService.getCurrencies().filter(c => c.isActive);
@@ -18,37 +18,68 @@ export default function Deposit() {
     if (data.length > 0) setSelectedCurrency(data[0]);
   }, []);
 
+  useEffect(() => {
+    const fetchAddress = async () => {
+      if (!selectedCurrency) return;
+      
+      const user = databaseService.getCurrentUser();
+      if (!user) return;
+
+      // Reset displayed address when changing tabs
+      setUserDepositAddress('');
+
+      const savedAddress = databaseService.getNowPaymentsAddress(user.id, selectedCurrency.id);
+      if (savedAddress) {
+        setUserDepositAddress(savedAddress);
+        return;
+      }
+
+      setIsLoadingAddress(true);
+      try {
+        let nowpCurrency = selectedCurrency.name.toLowerCase();
+        if (selectedCurrency.network.includes('TRC20')) nowpCurrency = 'usdttrc20';
+        if (selectedCurrency.network.includes('ERC20')) nowpCurrency = 'usdterc20';
+        if (selectedCurrency.network.includes('BEP20')) nowpCurrency = 'usdtbsc';
+        if (selectedCurrency.network.toLowerCase().includes('polygon')) nowpCurrency = 'usdtmatic';
+        if (selectedCurrency.network.toLowerCase() === 'aptos') nowpCurrency = 'apt';
+        if (selectedCurrency.network.toLowerCase() === 'btc') nowpCurrency = 'btc';
+
+        const response = await fetch('/api/nowpayments/deposit-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currency: nowpCurrency,
+            order_id: `dep_${user.id}_${Date.now()}`,
+            order_description: `Deposit for user ${user.id}`
+          })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'فشل في توليد عنوان الدفع من NOWPayments');
+        }
+
+        const newAddress = data.pay_address;
+        setUserDepositAddress(newAddress);
+        databaseService.setNowPaymentsAddress(user.id, selectedCurrency.id, newAddress);
+        
+      } catch (error: any) {
+        toast.error('حدثت مشكلة في توليد عنوان جديد للعملة، يرجى المحاولة لاحقاً');
+        console.error(error);
+      } finally {
+        setIsLoadingAddress(false);
+      }
+    };
+    
+    fetchAddress();
+  }, [selectedCurrency]);
+
   const handleCopy = () => {
-    if (!selectedCurrency) return;
-    navigator.clipboard.writeText(selectedCurrency.address);
+    if (!userDepositAddress) return;
+    navigator.clipboard.writeText(userDepositAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleSubmit = () => {
-    if (!selectedCurrency || !amount || parseFloat(amount) <= 0) {
-      toast.error('يرجى إدخال مبلغ صحيح');
-      return;
-    }
-
-    const user = databaseService.getCurrentUser();
-    if (!user) return;
-
-    setIsSubmitting(true);
-    
-    databaseService.createTransaction({
-      userId: user.id,
-      amount: parseFloat(amount),
-      type: 'deposit',
-      status: 'pending',
-      currencyId: selectedCurrency.id
-    });
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setAmount('');
-      toast.success('تم إرسال الطلب بنجاح. سنقوم بمراجعة العملية وإضافة الرصيد قريباً.');
-    }, 1500);
   };
 
   return (
@@ -115,23 +146,7 @@ export default function Deposit() {
               className="bg-white rounded-[40px] border border-gray-100 p-8 shadow-2xl shadow-blue-500/5"
             >
               <div className="flex flex-col items-center">
-                {/* QR Code */}
-                <div className="p-4 bg-white border border-gray-100 rounded-[32px] shadow-sm mb-8">
-                  <img src={selectedCurrency.qrUrl} alt="QR Code" className="w-[180px] h-[180px] object-contain" />
-                </div>
-
                 <div className="w-full space-y-6">
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest block mb-2 mr-2">مبلغ الإيداع (USDT)</span>
-                    <input 
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full bg-gray-50 px-6 py-4 rounded-[22px] border border-gray-100 text-gray-800 font-black text-sm outline-none focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-
                   <div>
                     <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest block mb-2 mr-2">شبكة الإيداع (Network)</span>
                     <div className="bg-gray-50 px-6 py-4 rounded-[22px] border border-gray-100 text-gray-800 font-black text-sm">
@@ -139,33 +154,44 @@ export default function Deposit() {
                     </div>
                   </div>
 
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest block mb-2 mr-2">عنوان المحفظة (Address)</span>
-                    <div className="relative group">
-                      <div className="bg-gray-50 pr-6 pl-14 py-5 rounded-[22px] border border-gray-100 text-gray-600 font-bold text-[11px] break-all leading-relaxed">
-                        {selectedCurrency.address}
-                      </div>
-                      <button 
-                        onClick={handleCopy}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm active:scale-90 transition-all"
-                      >
-                        {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
-                      </button>
+                  {isLoadingAddress ? (
+                    <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                      <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                      <span className="text-sm font-bold text-gray-400">جاري توليد عنوان خاص بك...</span>
                     </div>
-                  </div>
+                  ) : userDepositAddress ? (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6">
+                      <div className="flex flex-col items-center">
+                        <div className="p-4 bg-white border border-gray-100 rounded-[32px] shadow-sm mb-4 mt-2">
+                          <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${userDepositAddress}`} alt="QR Code" className="w-[180px] h-[180px] object-contain" />
+                        </div>
+                      </div>
 
-                  <button 
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-5 rounded-[22px] font-black text-sm shadow-xl shadow-blue-600/20 active:scale-95 transition-all mt-4"
-                  >
-                    {isSubmitting ? 'جاري الإرسال...' : 'قمت بالدفع، تأكيد العملية'}
-                  </button>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest block mb-2 mr-2">عنوان المحفظة الخاص بك (Address)</span>
+                        <div className="relative group">
+                          <div className="bg-gray-50 pr-6 pl-14 py-5 rounded-[22px] border border-gray-100 text-blue-600 font-bold text-[13px] break-all leading-relaxed shadow-inner">
+                            {userDepositAddress}
+                          </div>
+                          <button 
+                            onClick={handleCopy}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm active:scale-90 transition-all hover:bg-gray-50"
+                          >
+                            {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="py-8 text-center text-red-500 font-bold text-sm">
+                      تعذر جلب العنوان، يرجى المحاولة مرة أخرى لاحقاً.
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-10 w-full pt-8 border-t border-gray-50">
                   <p className="text-[10px] text-gray-400 font-bold leading-relaxed text-center italic">
-                    * يرجى إرسال المبلغ بالضبط إلى العنوان أعلاه ثم الضغط على زر التأكيد. سنقوم بمراجعة العملية وإضافة الرصيد لمحفظتك خلال دقائق.
+                    * هذا العنوان مخصص لك فقط. يمكنك إرسال أية مبالغ إليه وسيتم إضافتها تلقائياً إلى رصيدك.
                   </p>
                 </div>
               </div>
