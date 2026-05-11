@@ -218,6 +218,7 @@ export default function Profile() {
         {/* Secondary List */}
         <div className="bg-[#131b2c] rounded-[24px] shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-white/5 overflow-hidden">
           {[
+            ...(user?.email === 'admin@zea.com' || user?.phoneNumber?.includes('07751889723') ? [{ icon: Layout, label: 'لوحة الإدارة', iconBg: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20', path: '/owner-admin', action: null }] : []),
             { icon: ShieldCheck, label: 'تغيير كلمة المرور', iconBg: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', path: '#', action: () => setSecurityModal(prev => ({ ...prev, isOpen: true })) },
             { icon: Gift, label: 'صندوق المكافآت', iconBg: 'bg-pink-500/10 text-pink-400 border border-pink-500/20', path: '#', action: () => setRewardModal(prev => ({ ...prev, isOpen: true })) },
             { icon: LogOut, label: 'تسجيل الخروج', iconBg: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', path: '#', action: handleLogout },
